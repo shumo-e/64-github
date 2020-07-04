@@ -14,7 +14,7 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="Common">
-      <UniqueIdentifier>{a1c115a3-c5d9-4dfb-b172-332e339f9456}</UniqueIdentifier>
+      <UniqueIdentifier>{4d099762-5c92-42e9-a544-f4f6d1061f7a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -46,6 +46,9 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="Common\PE.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\PreventDebug.h">
       <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>

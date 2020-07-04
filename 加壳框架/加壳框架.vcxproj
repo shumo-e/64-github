@@ -173,6 +173,7 @@
     <ClInclude Include="Common\FileOperation.h" />
     <ClInclude Include="Common\header.h" />
     <ClInclude Include="Common\PE.h" />
+    <ClInclude Include="Common\PreventDebug.h" />
     <ClInclude Include="holder.h" />
     <ClInclude Include="MainDialog.h" />
     <ClInclude Include="Pack.h" />

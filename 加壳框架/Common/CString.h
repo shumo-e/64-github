@@ -233,7 +233,7 @@ public:
 *※※*  FullName:	Str_To_Num
 *※※*	功能	:	把字符串的数字格式转换为整型的数字
 *※※*  Returns:	成功返转换后的整形数字，失败返回0
-*※※*  Parameter:	TCHAR hex_[]，输入格式是十六进制的字符串
+*※※*  Parameter:	TCHAR hex_[]，输入格式是十六进制的字符串,比如可以这样写"0xff0055"或者"ff0055"
 *※※*  Parameter:
 *※※*  Parameter:
 *※※*  Parameter:
