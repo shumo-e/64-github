@@ -242,17 +242,18 @@ void DecodeIAT()
 	//开始解密
 	for (DWORD i = 0; i < g_stcParam.dwNumOfIATFuns; i++)
 	{
+		HMODULE hMod = NULL;
+		//获取模块名称
+		char* pModName = (char*)g_stcParam.pModNameBuf + g_stcParam.pMyImport[i].m_dwModNameRVA;
+		hMod = Preventdebug.g_pfnGetModuleHandleA(pModName);
+		if (hMod == NULL)
+		{
+			hMod = Preventdebug.g_pfnLoadLibraryA(pModName);
+		}
+
 		if (g_stcParam.pMyImport[i].m_bIsOrdinal)
 		{
 			//*********************************序号导出函数********************************
-
-			HMODULE hMod = NULL;
-			char* pModName = (char*)g_stcParam.pModNameBuf + g_stcParam.pMyImport[i].m_dwModNameRVA;
-			hMod = Preventdebug.g_pfnGetModuleHandleA(pModName);
-			if (hMod == NULL)
-			{
-				hMod = Preventdebug.g_pfnLoadLibraryA(pModName);
-			}
 
 			ULONG_PTR dwFunOrdinal = g_stcParam.pMyImport[i].m_Ordinal;
 			ULONG_PTR dwFunAddr = Preventdebug.g_pfnGetProcAddress(hMod, (char*)dwFunOrdinal);
@@ -283,14 +284,6 @@ void DecodeIAT()
 		}
 		else//********************************函数名导出函数*************************************
 		{			
-			HMODULE hMod = NULL;
-			char* pModName = (char*)g_stcParam.pModNameBuf + g_stcParam.pMyImport[i].m_dwModNameRVA;
-			hMod = Preventdebug.g_pfnGetModuleHandleA(pModName);
-			if (hMod == NULL)
-			{
-				hMod = Preventdebug.g_pfnLoadLibraryA(pModName);
-			}
-
 			//解密IAT函数名
 			ULONG_PTR dwFunNameRVA = g_stcParam.pMyImport[i].m_dwFunNameRVA;
 			char* pFunName = (char*)g_stcParam.pFunNameBuf + dwFunNameRVA;
