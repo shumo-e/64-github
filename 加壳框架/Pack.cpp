@@ -518,7 +518,7 @@ void Pack::SaveFile_pack(TCHAR* strPath,char* NewBuffer, ULONG_PTR m_uTotalSize)
 	bool res = fileopt.SaveFile_((char*)NewBuffer, m_uTotalSize, str.GetString());
 	if (res==0)
 	{
-		MessageBoxA(NULL, "文件保存失败!!", "温馨提示", MB_ICONHAND);
+		MessageBoxW(NULL, L"文件保存失败!!", L"温馨提示", MB_ICONHAND);
 		return;
 	}
 	TCHAR temp[] = _T("加壳成功！\r\n文件所在路径：\r\n");
