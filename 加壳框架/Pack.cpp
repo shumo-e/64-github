@@ -65,10 +65,22 @@ void Pack::StartProtect(HWND hwndDlg,TCHAR* strPath, BYTE byXor, PROTECTOR	pProc
 /* 2、获取Stub文件的PE信息，将必要的信息设置到Stub中								*/
 /*----------------------------------------------------------------------------------*/
 	//2.1 加载Stub.dll
-#ifdef _WIN64								
+#ifdef _WIN64	
+#ifdef UNICODE
 	//HMODULE hModule = LoadLibrary(L"../Stub/x64/Release/Stub.dll");
 #else
+	//HMODULE hModule = LoadLibrary("../Stub/x64/Release/Stub.dll");
+#endif // UNICODE
+
+	
+#else
+
+#ifdef UNICODE
 	//HMODULE hModule = LoadLibrary(L"../Stub/Release/Stub.dll");
+#else
+	//HMODULE hModule = LoadLibrary("../Stub/Release/Stub.dll");
+#endif // UNICODE
+
 #endif
 	HMODULE hModule= LoadLibrary(L"Stub.dll");
 	if (NULL == hModule) hModule = LoadLibrary(L"Stub.dll");
@@ -482,7 +494,6 @@ PBYTE Pack::MergeSection(PEInfo peinfo, PEInfo stubpeinfo, PBYTE lpMod, BYTE byX
 	return NewBuffer;
 }
 
-
 //保存文件
 void Pack::SaveFile_pack(TCHAR* strPath,char* NewBuffer, ULONG_PTR m_uTotalSize)
 {
@@ -507,11 +518,16 @@ void Pack::SaveFile_pack(TCHAR* strPath,char* NewBuffer, ULONG_PTR m_uTotalSize)
 	bool res = fileopt.SaveFile_((char*)NewBuffer, m_uTotalSize, str.GetString());
 	if (res==0)
 	{
-		MessageBox(NULL, L"文件保存失败!!", L"温馨提示", MB_ICONHAND);
+		MessageBoxA(NULL, "文件保存失败!!", "温馨提示", MB_ICONHAND);
 		return;
 	}
 	TCHAR temp[] = _T("加壳成功！\r\n文件所在路径：\r\n");
 	CString ss = temp;
 	ss += str;
-	MessageBox(NULL, ss.GetString(), L"温馨提示", MB_ICONINFORMATION);
+#ifdef UNICODE
+	MessageBoxW(NULL, ss.GetString(), L"温馨提示", MB_ICONINFORMATION);
+#else
+	MessageBoxA(NULL, ss.GetString(), "温馨提示", MB_ICONINFORMATION);
+#endif // !UNICODE
+	
 }

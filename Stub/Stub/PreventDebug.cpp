@@ -177,11 +177,10 @@ BOOL PreventDebug::Check_ZwSetInformationObject()
 	typedef NTSTATUS(__stdcall* NTSETINFORMATIONOBJECT)(HANDLE objhandle, int objinforClass, PVOID objinfo, ULONG Length);
 	NTSETINFORMATIONOBJECT pZwSetInformationObject;
 
-	typedef WINBASEAPI	BOOL(WINAPI* SETHANDLEINFORMATION)(_In_ HANDLE hObject, _In_ DWORD dwMask, _In_ DWORD dwFlags);
+	typedef BOOL(__stdcall* SETHANDLEINFORMATION)(_In_ HANDLE hObject, _In_ DWORD dwMask, _In_ DWORD dwFlags);
 	SETHANDLEINFORMATION pSetHandleInformation;
 
-	typedef WINBASEAPI
-		BOOL(WINAPI* DUPLICATEHANDLE)(
+	typedef BOOL(__stdcall* DUPLICATEHANDLE)(
 			_In_ HANDLE hSourceProcessHandle,
 			_In_ HANDLE hSourceHandle,
 			_In_ HANDLE hTargetProcessHandle,
@@ -211,7 +210,60 @@ BOOL PreventDebug::Check_ZwSetInformationObject()
 }
 
 
-typedef struct tagPROCESSENTRY32W
+//typedef struct tagPROCESSENTRY32W
+//{
+//	DWORD   dwSize;
+//	DWORD   cntUsage;
+//	DWORD   th32ProcessID;          // this process
+//	ULONG_PTR th32DefaultHeapID;
+//	DWORD   th32ModuleID;           // associated exe
+//	DWORD   cntThreads;
+//	DWORD   th32ParentProcessID;    // this process's parent process
+//	LONG    pcPriClassBase;         // Base priority of process's threads
+//	DWORD   dwFlags;
+//	WCHAR   szExeFile[MAX_PATH];    // Path
+//} PROCESSENTRY32W,* LPPROCESSENTRY32W;
+//#define TH32CS_SNAPPROCESS  0x00000002
+//
+////反虚拟机
+//bool PreventDebug::GetProcessIdByName(TCHAR* szProcessName)
+//{
+//	typedef WINBASEAPI	int	(WINAPI* LSTRCMP)(_In_ LPCWSTR lpString1, _In_ LPCWSTR lpString2);
+//	LSTRCMP plstrcmp;
+//	typedef HANDLE(WINAPI* CREATETOOLHELP32SNAPSHOT)(DWORD dwFlags, DWORD th32ProcessID);
+//	CREATETOOLHELP32SNAPSHOT pCreateToolhelp32Snapshot;
+//	typedef BOOL(WINAPI* PROCESS32FIRST)(HANDLE hSnapshot, LPPROCESSENTRY32W lppe);
+//	PROCESS32FIRST pProcess32First;
+//	typedef BOOL(WINAPI* PROCESS32NEXT)(HANDLE hSnapshot, LPPROCESSENTRY32W lppe);
+//	PROCESS32NEXT pProcess32Next;
+//
+//	HMODULE hModule_1 = g_pfnLoadLibraryA("kernel32.dll");
+//	plstrcmp = (LSTRCMP)g_pfnGetProcAddress(hModule_1, "lstrcmpW");
+//	pCreateToolhelp32Snapshot = (CREATETOOLHELP32SNAPSHOT)g_pfnGetProcAddress(hModule_1, "CreateToolhelp32Snapshot");
+//	pProcess32First = (PROCESS32FIRST)g_pfnGetProcAddress(hModule_1, "Process32FirstW");
+//	pProcess32Next = (PROCESS32NEXT)g_pfnGetProcAddress(hModule_1, "Process32NextW");
+//
+//	HANDLE hSnapProcess = pCreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+//	if (hSnapProcess == NULL)
+//	{
+//		return FALSE;
+//	}
+//	PROCESSENTRY32W pe32 = { 0 };
+//	pe32.dwSize = sizeof(pe32);
+//	BOOL bRet = pProcess32First(hSnapProcess, &pe32);
+//	while (bRet)
+//	{
+//		if (plstrcmp(pe32.szExeFile, szProcessName) == 0)
+//		{
+//			//g_pfnMessageBox(NULL, L"这是虚拟机", L"Hello PEDIY", MB_OK);
+//			return TRUE;
+//		}
+//		bRet = pProcess32Next(hSnapProcess, &pe32);
+//	}
+//	return FALSE;
+//}
+
+typedef struct tagPROCESSENTRY32or64
 {
 	DWORD   dwSize;
 	DWORD   cntUsage;
@@ -222,39 +274,61 @@ typedef struct tagPROCESSENTRY32W
 	DWORD   th32ParentProcessID;    // this process's parent process
 	LONG    pcPriClassBase;         // Base priority of process's threads
 	DWORD   dwFlags;
+#ifdef UNICODE
 	WCHAR   szExeFile[MAX_PATH];    // Path
-} PROCESSENTRY32W,* LPPROCESSENTRY32W;
+#else
+	CHAR    szExeFile[MAX_PATH];    // Path
+#endif // UNICODE
+
+} PROCESSENTRY32or64, * LPPROCESSENTRY32or64;
 #define TH32CS_SNAPPROCESS  0x00000002
 
-//反虚拟机
+
+//反虚拟机(寻找目标进程，成功返回true,失败返回false)
 bool PreventDebug::GetProcessIdByName(TCHAR* szProcessName)
 {
-	typedef WINBASEAPI	int	(WINAPI* LSTRCMP)(_In_ LPCWSTR lpString1, _In_ LPCWSTR lpString2);
-	LSTRCMP plstrcmp;
-	typedef HANDLE(WINAPI* CREATETOOLHELP32SNAPSHOT)(DWORD dwFlags, DWORD th32ProcessID);
+
+	typedef int(__stdcall* LSTRCMP_)(
+#ifdef UNICODE
+		_In_ LPCWSTR lpString1, _In_ LPCWSTR lpString2
+#else
+		_In_ LPCSTR lpString1, _In_ LPCSTR lpString2
+#endif // UNICODE
+		);
+	LSTRCMP_ plstrcmpi;
+
+	typedef HANDLE(__stdcall* CREATETOOLHELP32SNAPSHOT)(DWORD dwFlags, DWORD th32ProcessID);
 	CREATETOOLHELP32SNAPSHOT pCreateToolhelp32Snapshot;
-	typedef BOOL(WINAPI* PROCESS32FIRST)(HANDLE hSnapshot, LPPROCESSENTRY32W lppe);
+	typedef BOOL(__stdcall* PROCESS32FIRST)(HANDLE hSnapshot, LPPROCESSENTRY32or64 lppe);
 	PROCESS32FIRST pProcess32First;
-	typedef BOOL(WINAPI* PROCESS32NEXT)(HANDLE hSnapshot, LPPROCESSENTRY32W lppe);
+	typedef BOOL(__stdcall* PROCESS32NEXT)(HANDLE hSnapshot, LPPROCESSENTRY32or64 lppe);
 	PROCESS32NEXT pProcess32Next;
 
 	HMODULE hModule_1 = g_pfnLoadLibraryA("kernel32.dll");
-	plstrcmp = (LSTRCMP)g_pfnGetProcAddress(hModule_1, "lstrcmpW");
 	pCreateToolhelp32Snapshot = (CREATETOOLHELP32SNAPSHOT)g_pfnGetProcAddress(hModule_1, "CreateToolhelp32Snapshot");
+
+#ifdef UINCODE
+	plstrcmpi = (LSTRCMP_)g_pfnGetProcAddress(hModule_1, "lstrcmpiW");
 	pProcess32First = (PROCESS32FIRST)g_pfnGetProcAddress(hModule_1, "Process32FirstW");
 	pProcess32Next = (PROCESS32NEXT)g_pfnGetProcAddress(hModule_1, "Process32NextW");
+
+#else
+	plstrcmpi = (LSTRCMP_)g_pfnGetProcAddress(hModule_1, "lstrcmpiA");
+	pProcess32First = (PROCESS32FIRST)g_pfnGetProcAddress(hModule_1, "Process32First");
+	pProcess32Next = (PROCESS32NEXT)g_pfnGetProcAddress(hModule_1, "Process32Next");
+#endif // UINCODE
 
 	HANDLE hSnapProcess = pCreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	if (hSnapProcess == NULL)
 	{
 		return FALSE;
 	}
-	PROCESSENTRY32W pe32 = { 0 };
+	PROCESSENTRY32or64 pe32 = { 0 };
 	pe32.dwSize = sizeof(pe32);
 	BOOL bRet = pProcess32First(hSnapProcess, &pe32);
 	while (bRet)
 	{
-		if (plstrcmp(pe32.szExeFile, szProcessName) == 0)
+		if (plstrcmpi(pe32.szExeFile, szProcessName) == 0)
 		{
 			//g_pfnMessageBox(NULL, L"这是虚拟机", L"Hello PEDIY", MB_OK);
 			return TRUE;
